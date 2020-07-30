@@ -32,6 +32,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     'imageURL': '',
   };
   var is_init = true;
+  var _isLoading = false;
 
   @override
   void initState() {
@@ -53,7 +54,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
   void didChangeDependencies() {
     // TODO: implement didChangeDependencies
     if (is_init) {
-      final productId = ModalRoute.of(context).settings.arguments as String;
+      final productId = ModalRoute
+          .of(context)
+          .settings
+          .arguments as String;
 
       if (productId != null) {
         _editedProduct =
@@ -78,23 +82,51 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  void _saveForm() {
-    final _isValid = _form.currentState.validate();
-    if (!_isValid) {
+  Future<void> _saveForm() async {
+    final isValid = _form.currentState.validate();
+    if (!isValid) {
       return;
     }
     _form.currentState.save();
-
-
-    if(_editedProduct.id != null) {
-
-      Provider.of<Products>(context, listen: false).updateProdct(_editedProduct.id, _editedProduct);
-
+    setState(() {
+      _isLoading = true;
+    });
+    if (_editedProduct.id != null) {
+      await Provider.of<Products>(context, listen: false)
+          .updateProduct(_editedProduct.id, _editedProduct);
+    } else {
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editedProduct);
+      } catch (error) {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('An error occurred!'),
+            content: Text('Something went wrong.'),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Okay'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+              )
+            ],
+          ),
+        );
+      }
+      // finally {
+      //   setState(() {
+      //     _isLoading = false;
+      //   });
+      //   Navigator.of(context).pop();
+      // }
     }
-    else {
-      Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
-    }
+    setState(() {
+      _isLoading = false;
+    });
     Navigator.of(context).pop();
+    // Navigator.of(context).pop();
   }
 
   @override
@@ -217,11 +249,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     child: _imageUrlController.text.isEmpty
                         ? Text('Enter a URL')
                         : FittedBox(
-                            child: Image.network(
-                              _imageUrlController.text,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                      child: Image.network(
+                        _imageUrlController.text,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                   Expanded(
                     child: TextFormField(

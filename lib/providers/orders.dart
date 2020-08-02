@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import '../providers/cart.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class OrderItem with ChangeNotifier {
   final String id;
@@ -8,11 +10,10 @@ class OrderItem with ChangeNotifier {
   final List<CartItem> products;
   final DateTime dateTime;
 
-  OrderItem(
-      {@required this.id,
-      @required this.amount,
-      @required this.products,
-      @required this.dateTime});
+  OrderItem({@required this.id,
+    @required this.amount,
+    @required this.products,
+    @required this.dateTime});
 }
 
 class Orders with ChangeNotifier {
@@ -22,13 +23,33 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  void addOrders(List<CartItem> cartproducts, double total) {
+  Future<void> addOrders(List<CartItem> cartProducts, double total) async {
+    const url = 'https://shop-app-aa1d4.firebaseio.com/orders.json';
+    final timestamp = DateTime.now();
+    final response = await http.post(
+      url,
+      body: json.encode({
+        'amount': total,
+        'dateTime': timestamp.toIso8601String(),
+        'products': cartProducts
+            .map((cp) => {
+          'id': cp.id,
+          'title': cp.title,
+          'quantity': cp.quantity,
+          'price': cp.price,
+        })
+            .toList(),
+      }),
+    );
     _orders.insert(
-        0,
-        OrderItem(
-            id: DateTime.now().toString(),
-            amount: total,
-            products: cartproducts,
-            dateTime: DateTime.now()));
+      0,
+      OrderItem(
+        id: json.decode(response.body)['name'],
+        amount: total,
+        dateTime: timestamp,
+        products: cartProducts,
+      ),
+    );
+    notifyListeners();
   }
 }

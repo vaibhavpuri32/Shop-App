@@ -18,6 +18,6 @@ samples, guidance on mobile development, and a full API reference.
 
 Summary about the project 
 
-echnologies used : Dart,Flutter, Firebase
+Technologies used : Dart,Flutter, Firebase
 (In progress) Flutter based material design android application which allows multiple users to sell and purchase products .
  Involves multiple applications of OOPs and uses Firebase API for authentication and databse.

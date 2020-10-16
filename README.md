@@ -1,4 +1,4 @@
-# cart
+# SHOP APP
 
 A new Flutter application.
 
